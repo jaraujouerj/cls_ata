@@ -95,6 +95,39 @@
 	\end{center}
 }
 
+% Comando para data por extenso
+% Argumento: DD/MM/YYYY
+
+\def\parseataextensodateaux#1/#2/#3\relax{\@parseataextensodate{#1}{#2}{#3}}
+
+\newcommand{\@parseataextensodate}[3]{%
+    \def\portuguesemonthname{[Mês Inválido]}% Default value
+    \ifcase#2\relax % Month is #2
+        \or \def\portuguesemonthname{janeiro}%
+        \or \def\portuguesemonthname{fevereiro}%
+        \or \def\portuguesemonthname{março}%
+        \or \def\portuguesemonthname{abril}%
+        \or \def\portuguesemonthname{maio}%
+        \or \def\portuguesemonthname{junho}%
+        \or \def\portuguesemonthname{julho}%
+        \or \def\portuguesemonthname{agosto}%
+        \or \def\portuguesemonthname{setembro}%
+        \or \def\portuguesemonthname{outubro}%
+        \or \def\portuguesemonthname{novembro}%
+        \or \def\portuguesemonthname{dezembro}%
+    \fi
+    % Formato final da data: DD de <Mês por Extenso> de YYYY
+    #1 de \portuguesemonthname de #3%
+}
+
+\newcommand{\dataextenso}[1]{%
+    % Chama o helper \@parseataextensodate passando os componentes da data
+    % A data #1 (DD/MM/YYYY) é passada para \parseataextensodateaux
+    % que então separa os argumentos por '/'
+    \expandafter\parseataextensodateaux#1\relax
+}
+% Exemplo de uso: \dataextenso{15/06/2025}
+
 % Comando para seção de professores presentes
 \newcommand{\profpresentes}{
 	\section*{PROFESSORES PRESENTES}
