@@ -86,6 +86,227 @@
 	\setlist[enumerate]{label=\Roman*., nosep, leftmargin=*}
 }
 
+% Comandos para conversão de números por extenso (Português)
+\makeatletter
+
+% Unidades (1-9)
+% \@numtoword@unidade{<num>}{<outputmacro>}
+\newcommand{\@numtoword@unidade}[2]{%
+  \ifcase#1\relax
+    \def#2{}% 0 - vazio
+  \or\def#2{um}% 1
+  \or\def#2{dois}% 2
+  \or\def#2{três}% 3
+  \or\def#2{quatro}% 4
+  \or\def#2{cinco}% 5
+  \or\def#2{seis}% 6
+  \or\def#2{sete}% 7
+  \or\def#2{oito}% 8
+  \or\def#2{nove}% 9
+  \else\def#2{[Unidade Inválida]}%
+  \fi
+}
+
+% Dezenas especiais (10-19)
+% \@numtoword@dezena@dez{<num>}{<outputmacro>}
+\newcommand{\@numtoword@dezena@dez}[2]{%
+  \ifcase#1\relax
+    \def#2{dez}% 10
+  \or\def#2{onze}% 11
+  \or\def#2{doze}% 12
+  \or\def#2{treze}% 13
+  \or\def#2{catorze}% 14
+  \or\def#2{quinze}% 15
+  \or\def#2{dezesseis}% 16
+  \or\def#2{dezessete}% 17
+  \or\def#2{dezoito}% 18
+  \or\def#2{dezenove}% 19
+  \else\def#2{[Dezena Inválida]}%
+  \fi
+}
+
+% Dezenas puras (20, 30, ..., 90)
+% \@numtoword@dezena@pura{<digit dezena>}{<outputmacro>}
+\newcommand{\@numtoword@dezena@pura}[2]{%
+  \ifcase#1\relax
+    \def#2{}%
+  \or\def#2{}% não usado para 1X
+  \or\def#2{vinte}% 2
+  \or\def#2{trinta}% 3
+  \or\def#2{quarenta}% 4
+  \or\def#2{cinquenta}% 5
+  \or\def#2{sessenta}% 6
+  \or\def#2{setenta}% 7
+  \or\def#2{oitenta}% 8
+  \or\def#2{noventa}% 9
+  \else\def#2{[Dezena Pura Inválida]}%
+  \fi
+}
+
+% Números de 1 a 99
+% \@numtoword@dd{<numero>}{<outputmacro>}
+\newif\if@temunidade@dd % flag para saber se tem unidade e adicionar "e"
+\newcommand{\@numtoword@dd}[2]{%
+  \edef\@tempnum{\number#1}% Ensure #1 is treated as a number, e.g. "00" -> 0
+  \def#2{}% Default to empty output
+  \ifnum\@tempnum<0\relax \def#2{[Número Negativo Inválido]}\fi
+  \ifnum\@tempnum=0\relax \def#2{}\fi % Explicitly empty for 0
+  \ifnum\@tempnum>0\relax % 1-99
+    \ifnum\@tempnum<10\relax % 1-9
+      \@numtoword@unidade{\@tempnum}{#2}%
+    \else
+      \ifnum\@tempnum<20\relax % 10-19
+        \expandafter\@numtoword@dezena@dez\expandafter{\the\numexpr\@tempnum-10\relax}{#2}%
+      \else % 20-99
+        \@temunidade@ddfalse
+        \edef\@dezena{\expandafter\@firstoftwo\@tempnum}%
+        \edef\@unidade{\expandafter\@secondoftwo\@tempnum}%
+        \@numtoword@dezena@pura{\@dezena}{\@dezenaword}%
+        \ifnum\@unidade>0
+            \@temunidade@ddtrue
+            \@numtoword@unidade{\@unidade}{\@unidadeword}%
+        \fi
+        \if@temunidade@dd
+            \edef#2{\@dezenaword\ e \@unidadeword}%
+        \else
+            \def#2{\@dezenaword}%
+        \fi
+      \fi
+    \fi
+  \fi
+  \ifnum\@tempnum>99\relax \def#2{[DD Inválido (>99)]}\fi
+}
+% Helpers to get digits (simplistic, for 2-digit numbers only)
+\def\@firstoftwo#1#2{#1}
+\def\@secondoftwo#1#2{#2}
+
+% Centenas puras (100, 200, ..., 900)
+% \@numtoword@centena@pura{<digit centena>}{<outputmacro>}
+\newcommand{\@numtoword@centena@pura}[2]{%
+  \ifcase#1\relax
+    \def#2{}%
+  \or\def#2{cem}% 1xx (para 100 sozinho) / "cento" (para 101-199)
+  \or\def#2{duzentos}%
+  \or\def#2{trezentos}%
+  \or\def#2{quatrocentos}%
+  \or\def#2{quinhentos}%
+  \or\def#2{seiscentos}%
+  \or\def#2{setecentos}%
+  \or\def#2{oitocentos}%
+  \or\def#2{novecentos}%
+  \else\def#2{[Centena Pura Inválida]}%
+  \fi
+}
+
+% Números de 1 a 999 (estrutura básica)
+% \@numtoword@ccc{<numero>}{<outputmacro>}
+\newcommand{\@numtoword@ccc}[2]{%
+  \edef\@tempnumccc{\number#1}% Ensure #1 is treated as a number
+  \def#2{}% Default to empty output
+  \ifnum\@tempnumccc<0\relax \def#2{[CCC Negativo Inválido]}\fi
+  \ifnum\@tempnumccc=0\relax \def#2{}\fi % Explicitly empty for 0
+  \ifnum\@tempnumccc>0\relax
+    \ifnum\@tempnumccc<100\relax % 1-99
+       \@numtoword@dd{\@tempnumccc}{#2}%
+    \else
+      \ifnum\@tempnumccc=100\relax \def#2{cem}\fi
+      \ifnum\@tempnumccc>100\relax
+        \ifnum\@tempnumccc<1000\relax % 101-999
+          % Parsing for 3 digits C D U
+          \edef\@tempstrccc{\@stringify@num\@tempnumccc}% Ensure it's a string for parsing
+          \edef\@digitoC{\expandafter\@firstofthree\@tempstrccc}%
+          \edef\@digitoD{\expandafter\@secondofthree\@tempstrccc}%
+          \edef\@digitoU{\expandafter\@thirdofthree\@tempstrccc}%
+          \edef\@restoDDstr{\@digitoD\@digitoU}%
+          \edef\@restoDDnum{\number\@restoDDstr}%
+
+          \@numtoword@centena@pura{\@digitoC}{\@centenaword}%
+          \ifnum\@digitoC=1\relax % cem vs cento
+              \ifnum\@restoDDnum>0\relax \def\@centenaword{cento}\fi
+          \fi
+
+          \@numtoword@dd{\@restoDDnum}{\@restoword}%
+
+          \ifnum\@restoDDnum>0\relax
+              \edef#2{\@centenaword\ e \@restoword}%
+          \else
+              \def#2{\@centenaword}%
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+  \ifnum\@tempnumccc>999\relax \def#2{[CCC Inválido (>999)]}\fi
+}
+% Helper to ensure a number is a string for parsing (e.g. 1 -> 001 for 3 digits)
+% This is a simplified version, real padding is more complex.
+% For now, assuming inputs to ccc and milhar will mostly be actual 3 or 4 digit numbers.
+\def\@stringify@num#1{#1}
+\def\@firstofthree#1#2#3{#1}
+\def\@secondofthree#1#2#3{#2}
+\def\@thirdofthree#1#2#3{#3}
+
+
+% Milhares (estrutura básica)
+% \@numtoword@milhar{<numero>}{<outputmacro>}
+\newcommand{\@numtoword@milhar}[2]{%
+  \edef\@tempnummil{\number#1}% Ensure #1 is treated as a number
+  \def#2{}% Default to empty
+  \ifnum\@tempnummil<0\relax \def#2{[Milhar Negativo Inválido]}\fi
+  \ifnum\@tempnummil=0\relax \def#2{}\fi % Explicitly empty for 0
+  \ifnum\@tempnummil>0\relax
+    ifnum\@tempnummil < 1000 \@numtoword@ccc{\@tempnummil}{#2}\fi % 1-999
+    ifnum\@tempnummil = 1000 \def#2{mil}\fi % 1000
+    ifnum\@tempnummil > 1000 % 1001-9999
+      ifnum\@tempnummil < 2000 % 1001-1999
+        \@numtoword@ccc{\number\numexpr\@tempnummil - 1000}{\@restomil}%
+        \ifx\@restomil\@empty % Should not happen if >1000 and <2000 unless error in ccc for 0
+          def#2{mil}% This case is for 1000, handled above. Error if \@restomil is empty for 1001-1999.
+                     % For safety, if \@restomil IS empty, just "mil" is better than "mil e".
+        \else
+          \def#2{mil e \@restomil}%
+        \fi
+      \fi
+      ifnum\@tempnummil > 1999 % 2000-9999
+        ifnum\@tempnummil < 10000
+          \edef\@tempstrmil{\@stringify@num\@tempnummil}%
+          \edef\@digitomil{\expandafter\@firstoffour\@tempstrmil}%
+          \edef\@restocccstr{\expandafter\@restofthreefromfour\@tempstrmil}%
+          \edef\@restocccnum{\number\@restocccstr}%
+          \@numtoword@unidade{\@digitomil}{\@milwordprefix}%
+          \@numtoword@ccc{\@restocccnum}{\@restomil}%
+          \ifx\@restomil\@empty
+              \edef#2{\@milwordprefix\ mil}%
+          \else
+              \edef#2{\@milwordprefix\ mil e \@restomil}%
+          \fi
+        \fi
+      \fi
+    \fi
+  \fi
+  ifnum\@tempnummil > 9999 \def#2{[Milhar Inválido (>9999)]}\fi
+}
+\def\@firstoffour#1#2#3#4{#1}
+\def\@restofthreefromfour#1#2#3#4{#2#3#4}
+
+
+% User-facing command
+\newcommand{\NumeroPorExtenso}[2]{%
+  \edef\@numtoextenso{\number#1}%
+  \def#2{}% Default to empty
+  \ifnum\@numtoextenso<0 \def#2{[NPE Negativo]}\fi
+  \ifnum\@numtoextenso=0 \def#2{zero}\fi % User command might say "zero" for 0. Or empty if preferred. Let's use "zero".
+  \ifnum\@numtoextenso>0
+    \ifnum\@numtoextenso<100 \@numtoword@dd{\@numtoextenso}{#2}\fi
+    \ifnum\@numtoextenso>99 \ifnum\@numtoextenso<1000 \@numtoword@ccc{\@numtoextenso}{#2}\fi\fi
+    \ifnum\@numtoextenso>999 \ifnum\@numtoextenso<10000 \@numtoword@milhar{\@numtoextenso}{#2}\fi\fi
+    % Add more ranges if needed e.g. >9999
+  \fi
+}
+
+\makeatother
+% Fim dos comandos para conversão de números por extenso
+
 % Comando para iniciar a ata
 \newcommand{\iniciarata}[2]{
 	\thispagestyle{firstpage}
@@ -116,8 +337,14 @@
         \or \def\portuguesemonthname{novembro}%
         \or \def\portuguesemonthname{dezembro}%
     \fi
-    % Formato final da data: DD de <Mês por Extenso> de YYYY
-    #1 de \portuguesemonthname de #3%
+
+    % Converter dia para extenso
+    \NumeroPorExtenso{#1}{\diaporextenso}%
+    % Converter ano para extenso
+    \NumeroPorExtenso{#3}{\anoporextenso}%
+
+    % Formato final com todas as partes por extenso:
+    \diaporextenso\ de \portuguesemonthname\ de \anoporextenso%
 }
 
 \newcommand{\dataextenso}[1]{%
@@ -126,7 +353,7 @@
     % que então separa os argumentos por '/'
     \expandafter\parseataextensodateaux#1\relax
 }
-% Exemplo de uso: \dataextenso{15/06/2025}
+% Exemplo de uso: \dataextenso{9/6/2025} -> nove de junho de dois mil e vinte e cinco
 
 % Comando para seção de professores presentes
 \newcommand{\profpresentes}{
