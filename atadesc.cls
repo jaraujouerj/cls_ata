@@ -89,6 +89,38 @@
 % Comandos para conversão de números por extenso (Português)
 \makeatletter
 
+% Macro to ensure a number string has a certain number of digits with leading zeros
+% #1: input number (e.g., 9, 25, 123)
+% #2: desired total number of digits (e.g., 2, 3, 4)
+% #3: output macro name (e.g., \myresult)
+\newcommand{\@ensure@digit@count}[3]{%
+  \edef\@normnum{\number#1}% Normalize the input number
+  \def\@padding{}% Initialize padding
+  \ifcase#2\relax % Desired digit count
+    % Case 0 and 1 are not typical for this use, default to no padding
+    \edef#3{\@normnum}%
+  \or % Case 1 digit (no padding needed beyond normalization)
+    \edef#3{\@normnum}%
+  \or % Case 2 digits
+    \ifnum\@normnum<10\relax \def\@padding{0}\fi
+    \edef#3{\@padding\@normnum}%
+  \or % Case 3 digits
+    \ifnum\@normnum<10\relax \def\@padding{00}\else
+      \ifnum\@normnum<100\relax \def\@padding{0}\fi
+    \fi
+    \edef#3{\@padding\@normnum}%
+  \or % Case 4 digits
+    \ifnum\@normnum<10\relax \def\@padding{000}\else
+      \ifnum\@normnum<100\relax \def\@padding{00}\else
+        \ifnum\@normnum<1000\relax \def\@padding{0}\fi
+      \fi
+    \fi
+    \edef#3{\@padding\@normnum}%
+  \else % Default for other digit counts (e.g., >4 or invalid)
+    \def#3{[Unsupported Digit Count #2]}% Or just \edef#3{\@normnum}
+  \fi
+}
+
 % Unidades (1-9)
 % \@numtoword@unidade{<num>}{<outputmacro>}
 \newcommand{\@numtoword@unidade}[2]{%
@@ -159,10 +191,11 @@
         \expandafter\@numtoword@dezena@dez\expandafter{\the\numexpr\@tempnum-10\relax}{#2}%
       \else % 20-99
         \@temunidade@ddfalse
-        \edef\@dezena{\expandafter\@firstoftwo\@tempnum}%
-        \edef\@unidade{\expandafter\@secondoftwo\@tempnum}%
+        \@ensure@digit@count{\@tempnum}{2}{\@padded@dd@num}% Ensure 2 digits for parsing
+        \edef\@dezena{\expandafter\@firstoftwo\@padded@dd@num}%
+        \edef\@unidade{\expandafter\@secondoftwo\@padded@dd@num}%
         \@numtoword@dezena@pura{\@dezena}{\@dezenaword}%
-        \ifnum\@unidade>0
+        \ifnum\number\@unidade>0 % Compare as number
             \@temunidade@ddtrue
             \@numtoword@unidade{\@unidade}{\@unidadeword}%
         \fi
@@ -213,10 +246,10 @@
       \ifnum\@tempnumccc>100\relax
         \ifnum\@tempnumccc<1000\relax % 101-999
           % Parsing for 3 digits C D U
-          \edef\@tempstrccc{\@stringify@num\@tempnumccc}% Ensure it's a string for parsing
-          \edef\@digitoC{\expandafter\@firstofthree\@tempstrccc}%
-          \edef\@digitoD{\expandafter\@secondofthree\@tempstrccc}%
-          \edef\@digitoU{\expandafter\@thirdofthree\@tempstrccc}%
+          \@ensure@digit@count{\@tempnumccc}{3}{\@padded@ccc@num}% Ensure 3 digits
+          \edef\@digitoC{\expandafter\@firstofthree\@padded@ccc@num}%
+          \edef\@digitoD{\expandafter\@secondofthree\@padded@ccc@num}%
+          \edef\@digitoU{\expandafter\@thirdofthree\@padded@ccc@num}%
           \edef\@restoDDstr{\@digitoD\@digitoU}%
           \edef\@restoDDnum{\number\@restoDDstr}%
 
@@ -238,10 +271,6 @@
   \fi
   \ifnum\@tempnumccc>999\relax \def#2{[CCC Inválido (>999)]}\fi
 }
-% Helper to ensure a number is a string for parsing (e.g. 1 -> 001 for 3 digits)
-% This is a simplified version, real padding is more complex.
-% For now, assuming inputs to ccc and milhar will mostly be actual 3 or 4 digit numbers.
-\def\@stringify@num#1{#1}
 \def\@firstofthree#1#2#3{#1}
 \def\@secondofthree#1#2#3{#2}
 \def\@thirdofthree#1#2#3{#3}
@@ -260,18 +289,24 @@
     ifnum\@tempnummil > 1000 % 1001-9999
       ifnum\@tempnummil < 2000 % 1001-1999
         \@numtoword@ccc{\number\numexpr\@tempnummil - 1000}{\@restomil}%
-        \ifx\@restomil\@empty % Should not happen if >1000 and <2000 unless error in ccc for 0
-          def#2{mil}% This case is for 1000, handled above. Error if \@restomil is empty for 1001-1999.
-                     % For safety, if \@restomil IS empty, just "mil" is better than "mil e".
+        % Check if \@restomil is empty (e.g. if \@numtoword@ccc returns empty for 0)
+        % This condition is for 1000, which is handled by "\ifnum\@tempnummil = 1000 \def#2{mil}\fi"
+        % For 1001 to 1999, \@restomil should not be empty.
+        % If it were, "mil e " would be wrong. "mil" alone would also be wrong for e.g. 1001.
+        % The current logic of \@numtoword@ccc for 0 ensures \@restomil is empty if remainder is 0.
+        % So, for 1000, \@numtoword@ccc{0}{\@restomil} makes \@restomil empty.
+        % The `mil e \@restomil` should be fine.
+        \ifx\@restomil\@empty % This implies the remainder was 0, e.g. processing 1000.
+             def#2{mil}% This correctly handles the case if somehow 1000 slips to here.
         \else
-          \def#2{mil e \@restomil}%
+             def#2{mil e \@restomil}%
         \fi
       \fi
       ifnum\@tempnummil > 1999 % 2000-9999
         ifnum\@tempnummil < 10000
-          \edef\@tempstrmil{\@stringify@num\@tempnummil}%
-          \edef\@digitomil{\expandafter\@firstoffour\@tempstrmil}%
-          \edef\@restocccstr{\expandafter\@restofthreefromfour\@tempstrmil}%
+          \@ensure@digit@count{\@tempnummil}{4}{\@padded@mil@num}% Ensure 4 digits
+          \edef\@digitomil{\expandafter\@firstoffour\@padded@mil@num}%
+          \edef\@restocccstr{\expandafter\@restofthreefromfour\@padded@mil@num}%
           \edef\@restocccnum{\number\@restocccstr}%
           \@numtoword@unidade{\@digitomil}{\@milwordprefix}%
           \@numtoword@ccc{\@restocccnum}{\@restomil}%
