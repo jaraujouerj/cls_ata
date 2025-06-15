@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{ata_desc}[2025/06/15 Classe para atas do DESC/UERJ]
+\ProvidesClass{atadesc}[2025/06/15 Classe para atas do DESC/UERJ]
 
 % Opções da classe
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{article}}
@@ -26,12 +26,12 @@
 
 % Cabeçalho da primeira página
 \fancypagestyle{firstpage}{
-	\fancyhf{}
-	\lhead{
-		\begin{minipage}{0.15\textwidth}
-			\includegraphics[width=2.5cm]{\universitylogo}
-		\end{minipage}
-		\hfill 
+    \fancyhf{}
+    \lhead{
+        \begin{minipage}{0.15\textwidth}
+            \includegraphics[width=2.5cm]{\universitylogo}
+        \end{minipage}
+        \hfill 
 		\begin{minipage}{0.85\textwidth}
 			\raggedright
 			UNIVERSIDADE DO ESTADO DO RIO DE JANEIRO \\
@@ -44,6 +44,61 @@
 
 % Estilo das páginas seguintes
 \pagestyle{plain}
+
+% Comando para formatar a data da ata
+\newcommand{\dataata}[2]{
+    \newcounter{dia}
+    \newcounter{mes}
+    \newcounter{ano}
+    \newcounter{hora}
+    \newcounter{minuto}
+
+    % Extrai dia, mês e ano
+    \setcounter{dia}{\numexpr #1/1000000}
+    \setcounter{mes}{\numexpr (#1-\thedia*1000000)/10000}
+    \setcounter{ano}{\numexpr #1-\thedia*1000000-\themes*10000}
+
+    % Extrai hora e minuto
+    \setcounter{hora}{\numexpr #2/100}
+    \setcounter{minuto}{\numexpr #2-\thehora*100}
+
+
+% Nomes dos meses
+    \newcommand{\mesnome}[1]{
+        \ifcase##1\or
+            janeiro\or fevereiro\or março\or abril\or maio\or junho\or
+            julho\or agosto\or setembro\or outubro\or novembro\or dezembro
+        \fi
+    }
+    
+    % Números por extenso
+    \newcommand{\numeroextenso}[1]{
+        \ifcase##1\or
+            um\or dois\or três\or quatro\or cinco\or seis\or sete\or oito\or nove\or dez\or
+            onze\or doze\or treze\or quatorze\or quinze\or dezesseis\or dezessete\or
+            dezoito\or dezenove\or vinte\or vinte e um\or vinte e dois\or vinte e três\or
+            vinte e quatro\or vinte e cinco\or vinte e seis\or vinte e sete\or vinte e oito\or
+            vinte e nove\or trinta\or trinta e um
+        \fi
+    }
+    
+    % Horas por extenso
+    \newcommand{\horaextenso}[1]{
+        \ifcase##1\or
+            uma\or duas\or três\or quatro\or cinco\or seis\or sete\or oito\or nove\or dez\or
+            onze\or doze\or treze\or quatorze\or quinze\or dezesseis\or dezessete\or
+            dezoito\or dezenove\or vinte\or vinte e uma\or vinte e duas\or vinte e três\or
+            vinte e quatro
+        \fi
+    }
+    
+    Aos \numeroextenso{\thedia} dias do mês de \mesnome{\themes} de dois mil e \numeroextenso{\numexpr\theano-2000}, às \horaextenso{\thehora} horas
+}
+
+% Exemplo de uso:
+% \dataata{09062025}{1700} produz:
+% "Aos nove dias do mês de junho de dois mil e vinte e cinco, às dezessete horas"
+
 
 % Comandos para professores
 \newcommand{\cristiana}{Prof\textsuperscript{a} Cristiana Barbosa Bentes\xspace}
@@ -86,6 +141,8 @@
 	\setlist[enumerate]{label=\Roman*., nosep, leftmargin=*}
 }
 
+
+
 % Comando para iniciar a ata
 \newcommand{\iniciarata}[2]{
 	\thispagestyle{firstpage}
@@ -94,6 +151,7 @@
 		\textbf{ATA DA REUNIÃO #1 DO CORPO DELIBERATIVO DE #2}
 	\end{center}
 }
+
 
 % Comando para seção de professores presentes
 \newcommand{\profpresentes}{
