@@ -46,7 +46,7 @@
 \pagestyle{plain}
 
 % Comando para formatar a data da ata
-\newcommand{\dataata}[2]{
+\newcommand{\abrirata}[2]{
     \newcounter{dia}
     \newcounter{mes}
     \newcounter{ano}
@@ -103,30 +103,43 @@
 % Comandos para professores
 \newcommand{\cristiana}{Prof\textsuperscript{a} Cristiana Barbosa Bentes\xspace}
 \newcommand{\matcristiana}{matrícula 30729-8\xspace}
+\newcommand{\gencristiana}{a}      % feminino
 \newcommand{\felipe}{Prof. Felipe Cassemiro Ulrichsen\xspace}
 \newcommand{\matfelipe}{matrícula 42354-1\xspace}
+\newcommand{\genfelipe}{o}        % masculino
 \newcommand{\gabriel}{Prof. Gabriel Cardoso de Carvalho\xspace}
 \newcommand{\matgabriel}{matrícula 42361-6\xspace}
+\newcommand{\gengabriel}{o}      % masculino
 \newcommand{\giomar}{Prof. Giomar Oliver Sequeiros Olivera\xspace}
 \newcommand{\matgiomar}{matrícula 41726-1\xspace}
+\newcommand{\gengiomar}{o}        % masculino
 \newcommand{\joao}{Prof. João Araujo Ribeiro\xspace}
 \newcommand{\matjoao}{matrícula 8055-6\xspace}
+\newcommand{\genjoao}{o}       % masculino
 \newcommand{\luiza}{Prof\textsuperscript{a} Luiza de Macedo Mourelle\xspace}
 \newcommand{\matluiza}{matrícula 7058-1\xspace}
+\newcommand{\genluiza}{a}      % feminino
 \newcommand{\margareth}{Prof\textsuperscript{a} Margareth Simões Penello Meirelles\xspace}
 \newcommand{\matmargareth}{matrícula 33784-0\xspace}
+\newcommand{\genmargareth}{a}  % feminino
 \newcommand{\luigi}{Prof. Luigi Maciel Ribeiro\xspace}
 \newcommand{\matluigi}{matrícula 42383-0\xspace}
+\newcommand{\genluigi}{o}      % masculino
 \newcommand{\rafaela}{Prof\textsuperscript{a} Rafaela Correia Brum\xspace}
 \newcommand{\matrafaela}{matrícula 42384-8\xspace}
+\newcommand{\genrafaela}{a}    % feminino
 \newcommand{\robert}{Prof. Robert Mota Oliveira\xspace}
 \newcommand{\matrobert}{matrícula 41623-0\xspace}
+\newcommand{\genrobert}{o}      % masculino
 \newcommand{\simone}{Prof\textsuperscript{a} Simone Ingrid Monteiro Gama\xspace}
 \newcommand{\matsimone}{matrícula 42362-4\xspace}
+\newcommand{\gensimone}{a}    % feminino
 \newcommand{\silas}{Prof. Silas Pereira Lima Filho\xspace}
 \newcommand{\matsilas}{matrícula 42995-1\xspace}
+\newcommand{\gensilas}{o}      % masculino
 \newcommand{\thiago}{Prof. Thiago Medeiros Carvalho\xspace}
 \newcommand{\matthiago}{matrícula 42350-9\xspace}
+\newcommand{\genthago}{o}      % masculino
 
 % Comando para itens aprovados
 \newcommand{\aprovado}{\textcolor{red}{\textbf{APROVADO}}}
@@ -167,14 +180,37 @@
 }
 
 % Comando para fechamento da ata
-\newcommand{\fecharata}[3]{
-	\vspace{1cm}
-	Às #1, nada mais havendo a tratar, eu, #2, lavrei a presente ata, que assino.
-	\vspace{2cm}
-	
-	\begin{center}
-		\textbf{#2}\\
-		Chefe do Departamento de Engenharia de Sistemas e Computação\\
-		#3\\
-	\end{center}
+\newcommand{\fecharata}[2]{%
+  \def\horaarg{#1}%
+  \expandafter\fecharataextract\horaarg:\relax{#2}%
 }
+
+\def\fecharataextract#1:#2:\relax#3{%
+  \def\horaext{\horaextenso{#1}}%
+  \def\minutoext{%
+    \ifnum#2=0 zero%
+    \else \numeroextenso{#2}%
+    \fi
+  }%
+  \vspace{1cm}
+  Às \horaext\ horas%
+  \ifnum#2>0\ e \minutoext\ minutos\fi, nada mais havendo a tratar, eu, #3, lavrei a presente ata, que assino.
+  \vspace{2cm}
+  \begin{center}
+    \textbf{#3}\\
+    Chefe do Departamento de Engenharia de Sistemas e Computação\\
+    \csname mat\expandafter\@gobble\string#3\endcsname\\
+  \end{center}
+}
+\makeatletter
+\newcommand{\afastamento}[6]{%
+  Apreciad\csname gen\expandafter\@gobble\string#1\endcsname{} o pedido de afastamento d\csname gen\expandafter\@gobble\string#1\endcsname{} %
+  #1, %
+  \csname mat\expandafter\@gobble\string#1\endcsname, %
+  para apresentação do trabalho intitulado ``\textit{#2}'' %
+  no evento ``\textit{#3}'', #4, de #5 a #6. %
+  \aprovado
+}
+
+\makeatother
+
